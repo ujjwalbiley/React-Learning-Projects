@@ -7,5 +7,5 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/React-Router/',
+  base: '/React-Learning-Projects/',
 })
