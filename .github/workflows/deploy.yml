@@ -1,4 +1,4 @@
-name: Deploy React Router Project
+name: Deploy All React Projects
 
 on:
   push:
@@ -15,31 +15,58 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: react-router-crash-course
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: react-router-crash-course/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build all projects
+        run: |
+          mkdir -p dist
 
-      - name: Build project
-        run: npm run build
+          projects=(
+            "03baisc-vite-react"
+            "03baiscreact"
+            "05hooks-in-react"
+            "06tailwindcss-props"
+            "07pwd-gen"
+            "bgChangerUsingReactHook"
+            "contextApi"
+            "react-router-crash-course"
+            "themeChanger"
+            "todocontextlocalStorage"
+          )
+
+          for project in "${projects[@]}"; do
+            echo "Building $project"
+
+            npm ci --prefix "$project"
+
+            if node -e "const p=require('./$project/package.json'); process.exit(p.dependencies?.['react-scripts'] || p.devDependencies?.['react-scripts'] ? 0 : 1)"; then
+
+              PUBLIC_URL="/React-Learning-Projects/$project" npm run build --prefix "$project"
+
+              mkdir -p "dist/$project"
+              cp -r "$project/build/." "dist/$project/"
+
+            else
+
+              npm run build --prefix "$project" -- --base="/React-Learning-Projects/$project/"
+
+              mkdir -p "dist/$project"
+              cp -r "$project/dist/." "dist/$project/"
+
+            fi
+          done
 
       - name: Upload build files
         uses: actions/upload-pages-artifact@v3
         with:
-          path: react-router-crash-course/dist
+          path: ./dist
 
   deploy:
     environment:
